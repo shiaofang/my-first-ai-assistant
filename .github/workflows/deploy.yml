@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]          # 只在 main 分支推送时运行
+  workflow_dispatch:           # 也可以手动触发
+
+permissions:
+  contents: read               # 读取代码
+  pages: write                 # 部署到 Pages
+  id-token: write              # 用于 GITHUB_TOKEN 的 OIDC
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ 拉取源码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ 安装 Node（或你需要的其他 runtime）
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # 3️⃣ 安装依赖
+      - name: Install dependencies
+        run: npm ci
+
+      # 4️⃣ 构建静态文件
+      - name: Build
+        run: npm run build   # -> 会生成 ./dist（或 ./build）
+
+      # 5️⃣ 把构建产物上传为 artifacts（GitHub Pages 需要的格式）
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist        # ← 改成你的构建输出目录
+
+      # 6️⃣ 部署到 GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
